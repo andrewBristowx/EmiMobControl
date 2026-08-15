@@ -52,6 +52,10 @@ Sobre cada granja aparece un texto con:
 - tier actual;
 - tolva conectada, desconectada o salida llena.
 
+El bloque también muestra un borde luminoso con el color de su tier. El
+renderizado incluye compatibilidad automática con EntityCulling, además de
+Sodium e Iris.
+
 ## Limpieza segura
 
 Por defecto se ejecuta cada 15 minutos y elimina únicamente monstruos vanilla

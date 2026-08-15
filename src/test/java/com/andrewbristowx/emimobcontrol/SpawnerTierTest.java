@@ -6,6 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Arrays;
+
 class SpawnerTierTest {
     @Test
     void everyUpgradeIsFasterAndProducesMore() {
@@ -34,5 +36,14 @@ class SpawnerTierTest {
         assertEquals("minecraft:diamond", SpawnerTier.DIAMOND.upgradeIngredientId().toString());
         assertEquals("minecraft:netherite_ingot", SpawnerTier.NETHERITE.upgradeIngredientId().toString());
         assertNull(SpawnerTier.NETHERITE.next());
+    }
+
+    @Test
+    void everyTierHasItsOwnBorderColor() {
+        long distinctColors = Arrays.stream(SpawnerTier.values())
+                .map(SpawnerTier::color)
+                .distinct()
+                .count();
+        assertEquals(SpawnerTier.values().length, distinctColors);
     }
 }
