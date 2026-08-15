@@ -3,6 +3,7 @@ package com.andrewbristowx.emimobcontrol;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SpawnerTierTest {
@@ -22,5 +23,16 @@ class SpawnerTierTest {
         assertEquals(1, SpawnerTier.BASE.simulatedKills());
         assertEquals(100, SpawnerTier.NETHERITE.cycleTicks());
         assertEquals(7, SpawnerTier.NETHERITE.simulatedKills());
+    }
+
+    @Test
+    void upgradesFollowTheRequiredCraftingOrder() {
+        assertEquals(SpawnerTier.IRON, SpawnerTier.BASE.next());
+        assertEquals("minecraft:iron_ingot", SpawnerTier.IRON.upgradeIngredientId().toString());
+        assertEquals("minecraft:gold_ingot", SpawnerTier.GOLD.upgradeIngredientId().toString());
+        assertEquals("minecraft:emerald", SpawnerTier.EMERALD.upgradeIngredientId().toString());
+        assertEquals("minecraft:diamond", SpawnerTier.DIAMOND.upgradeIngredientId().toString());
+        assertEquals("minecraft:netherite_ingot", SpawnerTier.NETHERITE.upgradeIngredientId().toString());
+        assertNull(SpawnerTier.NETHERITE.next());
     }
 }

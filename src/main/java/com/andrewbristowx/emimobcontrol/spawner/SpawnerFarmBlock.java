@@ -66,7 +66,8 @@ public final class SpawnerFarmBlock extends BaseEntityBlock {
             farm.clearContent();
             if (!player.isCreative() && level instanceof ServerLevel serverLevel
                     && SpawnerCaptureService.hasSilkTouch(serverLevel, player.getMainHandItem())) {
-                popResource(level, pos, SpawnerFarmBlockEntity.createSpawnerItem(farm.getEntityTypeId()));
+                popResource(level, pos, SpawnerFarmBlockEntity.createSpawnerItem(
+                        farm.getEntityTypeId(), farm.getTier()));
             }
         }
         return super.playerWillDestroy(level, pos, state, player);

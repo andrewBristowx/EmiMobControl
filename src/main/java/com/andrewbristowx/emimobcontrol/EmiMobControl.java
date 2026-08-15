@@ -5,6 +5,8 @@ import com.andrewbristowx.emimobcontrol.config.EmiMobControlConfig;
 import com.andrewbristowx.emimobcontrol.spawner.SpawnerCaptureService;
 import com.andrewbristowx.emimobcontrol.spawner.SpawnerFarmBlock;
 import com.andrewbristowx.emimobcontrol.spawner.SpawnerFarmBlockEntity;
+import com.andrewbristowx.emimobcontrol.spawner.SpawnerFarmItem;
+import com.andrewbristowx.emimobcontrol.spawner.SpawnerFarmUpgradeRecipe;
 import com.andrewbristowx.emimobcontrol.system.MobCleanupService;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
@@ -14,8 +16,9 @@ import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityT
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.crafting.RecipeSerializer;
+import net.minecraft.world.item.crafting.SimpleCraftingRecipeSerializer;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -31,6 +34,7 @@ public final class EmiMobControl implements ModInitializer {
     public static Item SPAWNER_FARM_ITEM;
     public static Item XP_ESSENCE;
     public static BlockEntityType<SpawnerFarmBlockEntity> SPAWNER_FARM_BLOCK_ENTITY;
+    public static RecipeSerializer<SpawnerFarmUpgradeRecipe> SPAWNER_FARM_UPGRADE_RECIPE;
 
     @Override
     public void onInitialize() {
@@ -52,12 +56,15 @@ public final class EmiMobControl implements ModInitializer {
                         .requiresCorrectToolForDrops()
                         .noOcclusion()));
         SPAWNER_FARM_ITEM = Registry.register(BuiltInRegistries.ITEM, blockId,
-                new BlockItem(SPAWNER_FARM, new Item.Properties().stacksTo(1)));
+                new SpawnerFarmItem(SPAWNER_FARM, new Item.Properties().stacksTo(1)));
         XP_ESSENCE = Registry.register(BuiltInRegistries.ITEM, id("xp_essence"),
                 new XpEssenceItem(new Item.Properties().stacksTo(64)));
         SPAWNER_FARM_BLOCK_ENTITY = Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE,
                 id("spawner_farm"),
                 FabricBlockEntityTypeBuilder.create(SpawnerFarmBlockEntity::new, SPAWNER_FARM).build());
+        SPAWNER_FARM_UPGRADE_RECIPE = Registry.register(BuiltInRegistries.RECIPE_SERIALIZER,
+                id("spawner_farm_upgrade"),
+                new SimpleCraftingRecipeSerializer<>(SpawnerFarmUpgradeRecipe::new));
     }
 
     public static ResourceLocation id(String path) {

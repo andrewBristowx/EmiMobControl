@@ -42,6 +42,7 @@ import java.util.UUID;
 public final class SpawnerFarmBlockEntity extends BlockEntity implements WorldlyContainer {
     private static final String DEFAULT_ENTITY = "minecraft:pig";
     private static final String ITEM_ENTITY_KEY = "EmiSpawnerEntity";
+    private static final String ITEM_TIER_KEY = "EmiSpawnerTier";
     private static final int INVENTORY_SIZE = 27;
     private static final int[] SLOTS = createSlots();
     private static final Set<String> DENIED = Set.of(
@@ -80,22 +81,39 @@ public final class SpawnerFarmBlockEntity extends BlockEntity implements Worldly
         CompoundTag tag = data.copyTag();
         String candidate = tag.getString(ITEM_ENTITY_KEY);
         if (isAllowedEntity(candidate)) entityTypeId = candidate;
+        tier = SpawnerTier.fromOrdinal(tag.getInt(ITEM_TIER_KEY));
         if (placer instanceof Player player) owner = player.getUUID();
         setChanged();
         sync();
     }
 
     public static ItemStack createSpawnerItem(String entityTypeId) {
+        return createSpawnerItem(entityTypeId, SpawnerTier.BASE);
+    }
+
+    public static ItemStack createSpawnerItem(String entityTypeId, SpawnerTier tier) {
         String safeId = isAllowedEntity(entityTypeId) ? entityTypeId : DEFAULT_ENTITY;
         ItemStack stack = new ItemStack(EmiMobControl.SPAWNER_FARM_ITEM);
         CompoundTag tag = new CompoundTag();
         tag.putString(ITEM_ENTITY_KEY, safeId);
+        tag.putInt(ITEM_TIER_KEY, tier.ordinal());
         stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
         EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(ResourceLocation.tryParse(safeId));
         Component mobName = type.getDescription();
         stack.set(DataComponents.CUSTOM_NAME,
                 Component.translatable("block.emimobcontrol.spawner_farm.named", mobName));
         return stack;
+    }
+
+    public static SpawnerTier getItemTier(ItemStack stack) {
+        CustomData data = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
+        return SpawnerTier.fromOrdinal(data.copyTag().getInt(ITEM_TIER_KEY));
+    }
+
+    public static void setItemTier(ItemStack stack, SpawnerTier tier) {
+        CompoundTag tag = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag();
+        tag.putInt(ITEM_TIER_KEY, tier.ordinal());
+        stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
     }
 
     public static boolean isAllowedEntity(String entityTypeId) {
@@ -129,11 +147,9 @@ public final class SpawnerFarmBlockEntity extends BlockEntity implements Worldly
     }
 
     private void refreshStatus(ServerLevel level, BlockPos pos, BlockState state) {
-        SpawnerTier newTier = SpawnerTier.detect(level, pos);
         boolean newHopper = level.getBlockState(pos.below()).is(Blocks.HOPPER);
         boolean newFull = !hasEmptySlot();
-        if (newTier != tier || newHopper != hopperConnected || newFull != outputFull) {
-            tier = newTier;
+        if (newHopper != hopperConnected || newFull != outputFull) {
             hopperConnected = newHopper;
             outputFull = newFull;
             setChanged();
@@ -246,8 +262,7 @@ public final class SpawnerFarmBlockEntity extends BlockEntity implements Worldly
         owner = tag.hasUUID("Owner") ? tag.getUUID("Owner") : null;
         progress = Math.max(0, tag.getInt("Progress"));
         xpRemainder = Math.max(0, tag.getInt("XpRemainder"));
-        int tierIndex = Math.max(0, Math.min(SpawnerTier.values().length - 1, tag.getInt("Tier")));
-        tier = SpawnerTier.values()[tierIndex];
+        tier = SpawnerTier.fromOrdinal(tag.getInt("Tier"));
         hopperConnected = tag.getBoolean("Hopper");
         outputFull = tag.getBoolean("OutputFull");
         ContainerHelper.loadAllItems(tag, items, registries);

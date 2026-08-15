@@ -22,23 +22,29 @@ Jefes, Pokémon, NPC y entidades de otros mods no pueden convertirse. Romper la
 granja vuelve a entregarla solamente con Toque de Seda; su inventario interno
 siempre cae para evitar pérdidas.
 
-## Mejoras
+## Mejoras mediante crafteo
 
-Rodea horizontalmente la granja con ocho bloques iguales, dejando la granja en
-el centro de un cuadrado de 3×3. El tier se detecta automáticamente:
+Coloca la granja en el centro de una mesa de crafteo y rodéala con ocho unidades
+del material del siguiente tier. La receta conserva el mob guardado y solamente
+permite avanzar un tier cada vez:
 
-| Tier | Anillo de 8 bloques | Ciclo | Muertes simuladas |
+```text
+M M M
+M G M    G = granja de spawner
+M M M    M = material del siguiente tier
+```
+
+| Tier resultante | 8 materiales requeridos | Ciclo | Muertes simuladas |
 |---|---|---:|---:|
 | Básico | Ninguno | 30 s | 1 |
-| Hierro | Bloques de hierro | 24 s | 2 |
-| Oro | Bloques de oro | 18 s | 3 |
-| Esmeralda | Bloques de esmeralda | 13 s | 4 |
-| Diamante | Bloques de diamante | 9 s | 5 |
-| Netherita | Bloques de netherita | 5 s | 7 |
+| Hierro | Lingotes de hierro | 24 s | 2 |
+| Oro | Lingotes de oro | 18 s | 3 |
+| Esmeralda | Esmeraldas | 13 s | 4 |
+| Diamante | Diamantes | 9 s | 5 |
+| Netherita | Lingotes de netherita | 5 s | 7 |
 
-Los bloques completos representan los lingotes o gemas solicitados y hacen que
-la mejora sea visible, recuperable y difícil de duplicar. Cambiar el anillo
-actualiza el tier sin romper la granja.
+El tier queda guardado en el objeto y se conserva al romper y volver a colocar
+la granja con Toque de Seda.
 
 Sobre cada granja aparece un texto con:
 
