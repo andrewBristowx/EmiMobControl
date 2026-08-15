@@ -52,9 +52,10 @@ Sobre cada granja aparece un texto con:
 - tier actual;
 - tolva conectada, desconectada o salida llena.
 
-El bloque también muestra un borde luminoso con el color de su tier. El
-renderizado incluye compatibilidad automática con EntityCulling, además de
-Sodium e Iris.
+El bloque también muestra un borde luminoso con el color de su tier. El texto
+usa una entidad vanilla `minecraft:text_display`, igual que el holograma del
+proyecto CobblePasture Optimizer, para funcionar con EntityCulling, Sodium e
+Iris.
 
 ## Limpieza segura
 

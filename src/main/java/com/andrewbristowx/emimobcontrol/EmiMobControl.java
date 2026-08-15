@@ -7,6 +7,7 @@ import com.andrewbristowx.emimobcontrol.spawner.SpawnerFarmBlock;
 import com.andrewbristowx.emimobcontrol.spawner.SpawnerFarmBlockEntity;
 import com.andrewbristowx.emimobcontrol.spawner.SpawnerFarmItem;
 import com.andrewbristowx.emimobcontrol.spawner.SpawnerFarmUpgradeRecipe;
+import com.andrewbristowx.emimobcontrol.spawner.SpawnerFarmDisplayService;
 import com.andrewbristowx.emimobcontrol.system.MobCleanupService;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
@@ -42,6 +43,7 @@ public final class EmiMobControl implements ModInitializer {
         registerContent();
         PlayerBlockBreakEvents.BEFORE.register(SpawnerCaptureService::beforeBlockBreak);
         ServerTickEvents.END_SERVER_TICK.register(MobCleanupService::tick);
+        ServerTickEvents.END_SERVER_TICK.register(SpawnerFarmDisplayService::serverTick);
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) ->
                 EmiMobControlCommand.register(dispatcher));
         LOGGER.info("EmiMobControl listo: limpieza segura y granjas compactas activadas.");

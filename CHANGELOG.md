@@ -10,6 +10,7 @@
 - Mejoras progresivas en mesa de crafteo que conservan el mob y el tier.
 - Borde luminoso del color de cada tier.
 - Compatibilidad con EntityCulling para que el texto flotante no desaparezca.
+- El texto flotante ahora usa `minecraft:text_display`, igual que CobblePasture Optimizer.
 - Holograma con criatura, tier y estado de salida.
 - Inventario interno de 27 espacios compatible con tolvas.
 - Comandos administrativos de estado, recarga y limpieza inmediata.

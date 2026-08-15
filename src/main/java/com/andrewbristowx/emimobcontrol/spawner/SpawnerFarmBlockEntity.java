@@ -65,7 +65,10 @@ public final class SpawnerFarmBlockEntity extends BlockEntity implements Worldly
 
     public static void serverTick(Level rawLevel, BlockPos pos, BlockState state, SpawnerFarmBlockEntity farm) {
         if (!(rawLevel instanceof ServerLevel level)) return;
-        if (level.getGameTime() % 20L == 0L) farm.refreshStatus(level, pos, state);
+        if (level.getGameTime() % 20L == 0L) {
+            farm.refreshStatus(level, pos, state);
+            SpawnerFarmDisplayService.sync(level, pos, farm);
+        }
         if (!farm.hopperConnected || farm.outputFull) return;
 
         farm.progress++;
@@ -85,6 +88,9 @@ public final class SpawnerFarmBlockEntity extends BlockEntity implements Worldly
         if (placer instanceof Player player) owner = player.getUUID();
         setChanged();
         sync();
+        if (level instanceof ServerLevel serverLevel) {
+            SpawnerFarmDisplayService.sync(serverLevel, worldPosition, this);
+        }
     }
 
     public static ItemStack createSpawnerItem(String entityTypeId) {
