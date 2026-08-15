@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "emimobcontrol",
+  "version": "${version}",
+  "name": "EmiMobControl",
+  "description": "Limpieza segura de mobs y granjas compactas creadas desde spawners con Toque de Seda.",
+  "authors": ["andrewBristowx"],
+  "environment": "*",
+  "entrypoints": {
+    "main": ["com.andrewbristowx.emimobcontrol.EmiMobControl"],
+    "client": ["com.andrewbristowx.emimobcontrol.client.EmiMobControlClient"]
+  },
+  "depends": {
+    "fabricloader": ">=0.17.2",
+    "minecraft": "1.21.1",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}
