@@ -15,9 +15,10 @@ import java.util.List;
 
 public final class EmiMobControlConfig {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
-    private static final Path PATH = FabricLoader.getInstance().getConfigDir().resolve("emimobcontrol.json");
+    private static final Path PATH = FabricLoader.getInstance().getConfigDir().resolve("chainamobcontrol.json");
     private static EmiMobControlConfig instance = new EmiMobControlConfig();
 
+    // Limpieza periódica original: por defecto solo hostiles vanilla lejanos.
     public boolean cleanupEnabled = true;
     public int cleanupIntervalMinutes = 15;
     public int cleanupMinimumPlayerDistance = 64;
@@ -28,6 +29,15 @@ public final class EmiMobControlConfig {
     public boolean protectLeashedMobs = true;
     public boolean protectPersistentMobs = true;
     public boolean protectVillagers = true;
+
+    // Control específico de fauna vanilla para CHAINA.
+    public boolean blockNaturalPassiveSpawns = true;
+    public boolean cleanPregeneratedPassiveMobs = true;
+    public int passiveCleanupChunksPerTick = 2;
+    public int passiveChunkLoadDelayTicks = 20;
+    public String passiveKeepTag = "chainamobcontrol_keep";
+    public List<String> vanillaPassiveEntityIds = defaultPassiveEntityIds();
+
     public List<String> excludedEntityIds = new ArrayList<>(List.of(
             "minecraft:villager",
             "minecraft:wandering_trader",
@@ -68,7 +78,53 @@ public final class EmiMobControlConfig {
     private void normalize() {
         cleanupIntervalMinutes = Math.max(1, Math.min(1440, cleanupIntervalMinutes));
         cleanupMinimumPlayerDistance = Math.max(0, Math.min(512, cleanupMinimumPlayerDistance));
+        passiveCleanupChunksPerTick = Math.max(1, Math.min(16, passiveCleanupChunksPerTick));
+        passiveChunkLoadDelayTicks = Math.max(0, Math.min(200, passiveChunkLoadDelayTicks));
+
+        if (passiveKeepTag == null || passiveKeepTag.isBlank()) passiveKeepTag = "chainamobcontrol_keep";
+        if (vanillaPassiveEntityIds == null) vanillaPassiveEntityIds = defaultPassiveEntityIds();
+        vanillaPassiveEntityIds.removeIf(value -> value == null || value.isBlank());
         if (excludedEntityIds == null) excludedEntityIds = new ArrayList<>();
         excludedEntityIds.removeIf(value -> value == null || value.isBlank());
+    }
+
+    private static ArrayList<String> defaultPassiveEntityIds() {
+        return new ArrayList<>(List.of(
+                "minecraft:armadillo",
+                "minecraft:axolotl",
+                "minecraft:bat",
+                "minecraft:bee",
+                "minecraft:camel",
+                "minecraft:cat",
+                "minecraft:chicken",
+                "minecraft:cod",
+                "minecraft:cow",
+                "minecraft:dolphin",
+                "minecraft:donkey",
+                "minecraft:fox",
+                "minecraft:frog",
+                "minecraft:glow_squid",
+                "minecraft:goat",
+                "minecraft:horse",
+                "minecraft:llama",
+                "minecraft:mooshroom",
+                "minecraft:mule",
+                "minecraft:ocelot",
+                "minecraft:panda",
+                "minecraft:parrot",
+                "minecraft:pig",
+                "minecraft:polar_bear",
+                "minecraft:pufferfish",
+                "minecraft:rabbit",
+                "minecraft:salmon",
+                "minecraft:sheep",
+                "minecraft:sniffer",
+                "minecraft:squid",
+                "minecraft:strider",
+                "minecraft:tadpole",
+                "minecraft:tropical_fish",
+                "minecraft:turtle",
+                "minecraft:wolf"
+        ));
     }
 }
