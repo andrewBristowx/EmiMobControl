@@ -1,0 +1,5 @@
+{
+  "variants": {
+    "": { "model": "chainamobcontrol:block/spawner_farm" }
+  }
+}
