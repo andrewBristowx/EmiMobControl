@@ -1,0 +1,15 @@
+{
+  "block.chainamobcontrol.spawner_farm": "Granja de spawner",
+  "block.chainamobcontrol.spawner_farm.named": "Granja de %s",
+  "item.chainamobcontrol.xp_essence": "Esencia de experiencia",
+  "text.chainamobcontrol.tier": "Tier: %s",
+  "text.chainamobcontrol.hopper.connected": "Tolva: conectada",
+  "text.chainamobcontrol.hopper.missing": "Tolva: no conectada",
+  "text.chainamobcontrol.inventory.full": "Salida llena",
+  "text.chainamobcontrol.tier.base": "Básico",
+  "text.chainamobcontrol.tier.iron": "Hierro",
+  "text.chainamobcontrol.tier.gold": "Oro",
+  "text.chainamobcontrol.tier.emerald": "Esmeralda",
+  "text.chainamobcontrol.tier.diamond": "Diamante",
+  "text.chainamobcontrol.tier.netherite": "Netherita"
+}
