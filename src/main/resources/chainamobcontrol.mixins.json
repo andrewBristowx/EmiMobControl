@@ -1,0 +1,11 @@
+{
+  "required": true,
+  "package": "com.andrewbristowx.emimobcontrol.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "MobFinalizeSpawnMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
