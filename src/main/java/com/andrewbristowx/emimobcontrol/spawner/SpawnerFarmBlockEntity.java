@@ -23,7 +23,9 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -43,15 +45,20 @@ public final class SpawnerFarmBlockEntity extends BlockEntity implements Worldly
     private static final String DEFAULT_ENTITY = "minecraft:pig";
     private static final String ITEM_ENTITY_KEY = "EmiSpawnerEntity";
     private static final String ITEM_TIER_KEY = "EmiSpawnerTier";
+    /** When set (non-blank), this farm skips the whole mob-kill/loot-table simulation and just drops
+     * copies of this exact item every cycle - used for materials with no sensible "kill" to simulate,
+     * like Cobblemon's Bonguris (Apricorns), which only ever come from a tree, never a mob. */
+    private static final String ITEM_DIRECT_KEY = "EmiSpawnerDirectItem";
     private static final int INVENTORY_SIZE = 27;
     private static final int[] SLOTS = createSlots();
     private static final Set<String> DENIED = Set.of(
             "minecraft:player", "minecraft:ender_dragon", "minecraft:wither",
-            "minecraft:warden", "minecraft:elder_guardian", "minecraft:giant"
+            "minecraft:elder_guardian", "minecraft:giant"
     );
 
     private final NonNullList<ItemStack> items = NonNullList.withSize(INVENTORY_SIZE, ItemStack.EMPTY);
     private String entityTypeId = DEFAULT_ENTITY;
+    private String directItemId = "";
     private UUID owner;
     private int progress;
     private int xpRemainder;
@@ -69,7 +76,12 @@ public final class SpawnerFarmBlockEntity extends BlockEntity implements Worldly
             farm.refreshStatus(level, pos, state);
             SpawnerFarmDisplayService.sync(level, pos, farm);
         }
-        if (!farm.hopperConnected || farm.outputFull) return;
+        // Production is only throttled by its own output filling up, not by requiring a literal
+        // vanilla Hopper block underneath - Sophisticated Storage's hopper upgrade (and anything else
+        // using Fabric's Transfer API, now wired up in EmiMobControl.onInitialize) also empties this
+        // container without ever placing a real Hopper block, so gating on hopperConnected here would
+        // starve production for anyone using those instead of a plain hopper.
+        if (farm.outputFull) return;
 
         farm.progress++;
         if (farm.progress < farm.tier.cycleTicks()) return;
@@ -84,6 +96,7 @@ public final class SpawnerFarmBlockEntity extends BlockEntity implements Worldly
         CompoundTag tag = data.copyTag();
         String candidate = tag.getString(ITEM_ENTITY_KEY);
         if (isAllowedEntity(candidate)) entityTypeId = candidate;
+        directItemId = tag.getString(ITEM_DIRECT_KEY);
         tier = SpawnerTier.fromOrdinal(tag.getInt(ITEM_TIER_KEY));
         if (placer instanceof Player player) owner = player.getUUID();
         setChanged();
@@ -111,6 +124,35 @@ public final class SpawnerFarmBlockEntity extends BlockEntity implements Worldly
         return stack;
     }
 
+    /** A farm pre-configured to drop a fixed item every cycle instead of simulating a mob kill - see
+     * {@link #ITEM_DIRECT_KEY}. {@code itemId} must already be a valid, non-air item id; callers (e.g.
+     * a crafting recipe's result NBT) are expected to only ever pass a real registered item.
+     * Accepts a comma-separated list (e.g. {@code "minecraft:honey_bottle,minecraft:honeycomb"}) to
+     * drop several different items every cycle instead of just one - a plain single id keeps working
+     * exactly as before, so this is backward compatible with every farm already placed. */
+    public static ItemStack createDirectItemSpawnerItem(String itemId) {
+        return createDirectItemSpawnerItem(itemId, SpawnerTier.BASE);
+    }
+
+    /** Same as {@link #createDirectItemSpawnerItem(String)} but preserving a specific tier - used when
+     * picking a placed farm back up, so upgrading it and then silk-touching it doesn't reset it to Base. */
+    public static ItemStack createDirectItemSpawnerItem(String itemId, SpawnerTier tier) {
+        ItemStack stack = new ItemStack(EmiMobControl.SPAWNER_FARM_ITEM);
+        CompoundTag tag = new CompoundTag();
+        tag.putString(ITEM_DIRECT_KEY, itemId);
+        tag.putInt(ITEM_TIER_KEY, tier.ordinal());
+        stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
+        Item item = BuiltInRegistries.ITEM.get(ResourceLocation.parse(firstDirectItemId(itemId)));
+        stack.set(DataComponents.CUSTOM_NAME,
+                Component.translatable("block.emimobcontrol.spawner_farm.named", item.getDescription()));
+        return stack;
+    }
+
+    private static String firstDirectItemId(String rawDirectItemId) {
+        int comma = rawDirectItemId.indexOf(',');
+        return comma < 0 ? rawDirectItemId : rawDirectItemId.substring(0, comma);
+    }
+
     public static SpawnerTier getItemTier(ItemStack stack) {
         CustomData data = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
         return SpawnerTier.fromOrdinal(data.copyTag().getInt(ITEM_TIER_KEY));
@@ -135,9 +177,18 @@ public final class SpawnerFarmBlockEntity extends BlockEntity implements Worldly
     }
 
     public Component getMobName() {
+        if (!directItemId.isBlank()) {
+            ResourceLocation itemId = ResourceLocation.tryParse(firstDirectItemId(directItemId));
+            Item item = itemId == null ? null : BuiltInRegistries.ITEM.get(itemId);
+            if (item != null && item != Items.AIR) return item.getDescription();
+        }
         ResourceLocation id = ResourceLocation.tryParse(entityTypeId);
         EntityType<?> type = id == null ? null : BuiltInRegistries.ENTITY_TYPE.get(id);
         return type.getDescription();
+    }
+
+    public String getDirectItemId() {
+        return directItemId;
     }
 
     public SpawnerTier getTier() {
@@ -164,6 +215,10 @@ public final class SpawnerFarmBlockEntity extends BlockEntity implements Worldly
     }
 
     private void produce(ServerLevel level, BlockPos pos) {
+        if (!directItemId.isBlank()) {
+            produceDirectItem();
+            return;
+        }
         ResourceLocation id = ResourceLocation.tryParse(entityTypeId);
         EntityType<?> type = id == null ? null : BuiltInRegistries.ENTITY_TYPE.get(id);
         if (type == null) return;
@@ -202,6 +257,22 @@ public final class SpawnerFarmBlockEntity extends BlockEntity implements Worldly
             int count = Math.min(64, essenceCount);
             insert(new ItemStack(EmiMobControl.XP_ESSENCE, count));
             essenceCount -= count;
+        }
+        outputFull = !hasEmptySlot();
+    }
+
+    /** Direct-item mode: no entity, no loot table - just hand over copies of the configured item(s).
+     * Reuses {@link SpawnerTier#simulatedKills()} as the per-cycle yield of EACH item so higher
+     * tiers still feel like an upgrade, the same way they multiply loot rolls in the normal
+     * kill-simulation mode. {@link #directItemId} may list several items separated by commas (e.g.
+     * a bee farm dropping both honey bottles and honeycomb every cycle) - a single id behaves
+     * exactly as before. */
+    private void produceDirectItem() {
+        for (String rawId : directItemId.split(",")) {
+            ResourceLocation itemId = ResourceLocation.tryParse(rawId.strip());
+            Item item = itemId == null ? null : BuiltInRegistries.ITEM.get(itemId);
+            if (item == null || item == Items.AIR) continue;
+            insert(new ItemStack(item, tier.simulatedKills()));
         }
         outputFull = !hasEmptySlot();
     }
@@ -251,6 +322,7 @@ public final class SpawnerFarmBlockEntity extends BlockEntity implements Worldly
     protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.saveAdditional(tag, registries);
         tag.putString("EntityType", entityTypeId);
+        tag.putString("DirectItem", directItemId);
         if (owner != null) tag.putUUID("Owner", owner);
         tag.putInt("Progress", progress);
         tag.putInt("XpRemainder", xpRemainder);
@@ -265,6 +337,7 @@ public final class SpawnerFarmBlockEntity extends BlockEntity implements Worldly
         super.loadAdditional(tag, registries);
         String candidate = tag.getString("EntityType");
         entityTypeId = isAllowedEntity(candidate) ? candidate : DEFAULT_ENTITY;
+        directItemId = tag.getString("DirectItem");
         owner = tag.hasUUID("Owner") ? tag.getUUID("Owner") : null;
         progress = Math.max(0, tag.getInt("Progress"));
         xpRemainder = Math.max(0, tag.getInt("XpRemainder"));
@@ -278,6 +351,7 @@ public final class SpawnerFarmBlockEntity extends BlockEntity implements Worldly
     public CompoundTag getUpdateTag(HolderLookup.Provider registries) {
         CompoundTag tag = new CompoundTag();
         tag.putString("EntityType", entityTypeId);
+        tag.putString("DirectItem", directItemId);
         tag.putInt("Tier", tier.ordinal());
         tag.putBoolean("Hopper", hopperConnected);
         tag.putBoolean("OutputFull", outputFull);
@@ -299,7 +373,8 @@ public final class SpawnerFarmBlockEntity extends BlockEntity implements Worldly
     @Override public void clearContent() { items.clear(); setChanged(); }
     @Override public int[] getSlotsForFace(Direction side) { return SLOTS; }
     @Override public boolean canPlaceItemThroughFace(int slot, ItemStack stack, @Nullable Direction direction) { return false; }
-    @Override public boolean canTakeItemThroughFace(int slot, ItemStack stack, Direction direction) { return direction == Direction.DOWN; }
+    // Any side, not just DOWN - a hopper/storage upgrade may be placed against any face of this block.
+    @Override public boolean canTakeItemThroughFace(int slot, ItemStack stack, Direction direction) { return true; }
 
     private static int[] createSlots() {
         int[] slots = new int[INVENTORY_SIZE];
