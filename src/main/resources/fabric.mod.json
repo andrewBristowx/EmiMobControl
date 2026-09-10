@@ -1,15 +1,18 @@
 {
   "schemaVersion": 1,
-  "id": "emimobcontrol",
+  "id": "chainamobcontrol",
   "version": "${version}",
-  "name": "EmiMobControl",
-  "description": "Limpieza segura de mobs y granjas compactas creadas desde spawners con Toque de Seda.",
+  "name": "ChainaMobControl",
+  "description": "Limpieza segura, granjas compactas y control de fauna vanilla para CHAINA SERVER.",
   "authors": ["andrewBristowx"],
   "environment": "*",
   "entrypoints": {
     "main": ["com.andrewbristowx.emimobcontrol.EmiMobControl"],
     "client": ["com.andrewbristowx.emimobcontrol.client.EmiMobControlClient"]
   },
+  "mixins": [
+    "chainamobcontrol.mixins.json"
+  ],
   "depends": {
     "fabricloader": ">=0.17.2",
     "minecraft": "1.21.1",

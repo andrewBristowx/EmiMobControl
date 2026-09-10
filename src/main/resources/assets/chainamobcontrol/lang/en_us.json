@@ -1,0 +1,15 @@
+{
+  "block.chainamobcontrol.spawner_farm": "Spawner Farm",
+  "block.chainamobcontrol.spawner_farm.named": "%s Farm",
+  "item.chainamobcontrol.xp_essence": "Experience Essence",
+  "text.chainamobcontrol.tier": "Tier: %s",
+  "text.chainamobcontrol.hopper.connected": "Hopper: connected",
+  "text.chainamobcontrol.hopper.missing": "Hopper: not connected",
+  "text.chainamobcontrol.inventory.full": "Output full",
+  "text.chainamobcontrol.tier.base": "Basic",
+  "text.chainamobcontrol.tier.iron": "Iron",
+  "text.chainamobcontrol.tier.gold": "Gold",
+  "text.chainamobcontrol.tier.emerald": "Emerald",
+  "text.chainamobcontrol.tier.diamond": "Diamond",
+  "text.chainamobcontrol.tier.netherite": "Netherite"
+}

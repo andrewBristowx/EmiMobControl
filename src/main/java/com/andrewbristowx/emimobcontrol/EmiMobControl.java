@@ -5,14 +5,17 @@ import com.andrewbristowx.emimobcontrol.config.EmiMobControlConfig;
 import com.andrewbristowx.emimobcontrol.spawner.SpawnerCaptureService;
 import com.andrewbristowx.emimobcontrol.spawner.SpawnerFarmBlock;
 import com.andrewbristowx.emimobcontrol.spawner.SpawnerFarmBlockEntity;
+import com.andrewbristowx.emimobcontrol.spawner.SpawnerFarmDisplayService;
 import com.andrewbristowx.emimobcontrol.spawner.SpawnerFarmItem;
 import com.andrewbristowx.emimobcontrol.spawner.SpawnerFarmUpgradeRecipe;
-import com.andrewbristowx.emimobcontrol.spawner.SpawnerFarmDisplayService;
 import com.andrewbristowx.emimobcontrol.system.MobCleanupService;
+import com.andrewbristowx.emimobcontrol.system.PassiveMobControlService;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
-import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerChunkEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
 import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -28,7 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public final class EmiMobControl implements ModInitializer {
-    public static final String MOD_ID = "emimobcontrol";
+    public static final String MOD_ID = "chainamobcontrol";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
     public static Block SPAWNER_FARM;
@@ -41,12 +44,20 @@ public final class EmiMobControl implements ModInitializer {
     public void onInitialize() {
         EmiMobControlConfig.load();
         registerContent();
+
         PlayerBlockBreakEvents.BEFORE.register(SpawnerCaptureService::beforeBlockBreak);
+
         ServerTickEvents.END_SERVER_TICK.register(MobCleanupService::tick);
         ServerTickEvents.END_SERVER_TICK.register(SpawnerFarmDisplayService::serverTick);
+        ServerTickEvents.END_SERVER_TICK.register(PassiveMobControlService::tick);
+        ServerChunkEvents.CHUNK_LOAD.register(PassiveMobControlService::onChunkLoad);
+        ServerLifecycleEvents.SERVER_STARTED.register(PassiveMobControlService::onServerStarted);
+        ServerLifecycleEvents.SERVER_STOPPING.register(PassiveMobControlService::onServerStopping);
+
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) ->
                 EmiMobControlCommand.register(dispatcher));
-        LOGGER.info("EmiMobControl listo: limpieza segura y granjas compactas activadas.");
+
+        LOGGER.info("ChainaMobControl listo: limpieza segura, granjas compactas y control de fauna vanilla activados.");
     }
 
     private static void registerContent() {
